@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Training">
+<title>Training Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #E8FF47;
+    --orange: #FF6B35;
+    --teal: #00D4AA;
+    --purple: #C084FC;
+    --slate: #94A3B8;
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface2: #1a1a1a;
+    --border: #222;
+    --text: #ffffff;
+    --muted: #888;
+    --dim: #555;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Barlow Condensed', sans-serif; }
+
+  /* APP SHELL */
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+  /* HEADER */
+  .header {
+    background: #111;
+    border-bottom: 1px solid var(--border);
+    padding: env(safe-area-inset-top, 12px) 16px 0;
+    flex-shrink: 0;
+  }
+  .header-top { padding-top: 12px; display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 12px; }
+  .header-title { font-size: 26px; font-weight: 900; text-transform: uppercase; line-height: 1; }
+  .header-title span { color: var(--yellow); }
+  .header-sub { font-size: 11px; letter-spacing: 0.18em; color: var(--dim); font-family: 'Barlow', sans-serif; margin-bottom: 3px; }
+  .badge { background: var(--yellow); color: #0a0a0a; padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; }
+
+  /* TABS */
+  .tabs { display: flex; border-top: 1px solid var(--border); }
+  .tab { flex: 1; padding: 10px 4px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; background: none; border: none; color: var(--dim); cursor: pointer; transition: all 0.2s; }
+  .tab.active { color: #0a0a0a; background: var(--yellow); }
+
+  /* SCROLLABLE CONTENT */
+  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  /* DAY STRIP */
+  .day-strip { display: flex; overflow-x: auto; background: #111; border-bottom: 1px solid var(--border); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .day-strip::-webkit-scrollbar { display: none; }
+  .day-btn { flex-shrink: 0; width: 52px; padding: 12px 4px; border: none; background: none; color: var(--dim); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; border-right: 1px solid var(--border); transition: all 0.2s; }
+  .day-btn .day-label { font-size: 14px; font-weight: 900; }
+  .day-btn .day-tag { font-size: 8px; letter-spacing: 0.1em; }
+  .day-btn.active { color: #0a0a0a; }
+
+  /* DAY HEADER */
+  .day-header { padding: 16px; border-bottom: 1px solid var(--border); }
+  .day-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .day-tag-badge { padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.15em; }
+  .day-name { font-size: 24px; font-weight: 900; text-transform: uppercase; line-height: 1; }
+  .day-focus { font-size: 12px; color: var(--muted); font-family: 'Barlow', sans-serif; margin-top: 2px; }
+  .warmup-box { padding: 10px 12px; background: var(--surface); border-left: 3px solid var(--dim); }
+  .box-label { font-size: 9px; letter-spacing: 0.18em; color: var(--dim); margin-bottom: 4px; }
+  .box-text { font-size: 12px; color: #aaa; font-family: 'Barlow', sans-serif; line-height: 1.5; }
+
+  /* EXERCISES */
+  .ex-list { padding-bottom: 16px; }
+  .ex-row { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.15s; }
+  .ex-row:active { background: var(--surface2); }
+  .ex-num { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 11px; flex-shrink: 0; background: var(--surface2); color: var(--dim); transition: all 0.2s; }
+  .ex-num.open { color: #0a0a0a; }
+  .ex-info { flex: 1; min-width: 0; }
+  .ex-name { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ex-stats { display: flex; gap: 10px; align-items: center; margin-top: 2px; }
+  .stat { text-align: center; }
+  .stat-val { font-size: 16px; font-weight: 900; line-height: 1; }
+  .stat-lbl { font-size: 8px; color: var(--dim); letter-spacing: 0.1em; }
+  .stat-sep { color: var(--border); font-size: 18px; }
+  .ex-chevron { font-size: 10px; color: var(--dim); flex-shrink: 0; transition: all 0.2s; }
+  .ex-chevron.open { color: var(--yellow); }
+
+  /* EXPANDED EXERCISE */
+  .ex-detail { padding: 10px 16px 14px 54px; background: #111; border-bottom: 1px solid var(--border); border-left: 3px solid var(--yellow); display: none; }
+  .ex-detail.open { display: block; }
+  .ex-detail .box-text { font-size: 13px; }
+
+  /* COOLDOWN */
+  .cooldown-box { margin: 0 16px 16px; padding: 12px; background: var(--surface); border-left: 3px solid var(--border); }
+
+  /* REST TIMER */
+  .timer-bar { background: #111; border-top: 1px solid var(--border); padding: 10px 16px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  .timer-display { font-size: 28px; font-weight: 900; color: var(--yellow); min-width: 72px; letter-spacing: -0.02em; }
+  .timer-display.running { color: var(--teal); }
+  .timer-display.done { color: var(--orange); }
+  .timer-label { font-size: 10px; color: var(--dim); letter-spacing: 0.12em; font-family: 'Barlow', sans-serif; }
+  .timer-btns { display: flex; gap: 6px; margin-left: auto; }
+  .timer-btn { padding: 8px 14px; border: none; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.1em; cursor: pointer; }
+  .timer-btn.primary { background: var(--yellow); color: #0a0a0a; }
+  .timer-btn.secondary { background: var(--surface2); color: var(--muted); }
+  .timer-presets { display: flex; gap: 4px; }
+  .preset-btn { padding: 6px 8px; border: 1px solid var(--border); background: none; color: var(--dim); font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .preset-btn:active { background: var(--surface2); }
+
+  /* PROGRESSION TAB */
+  .prog-content { padding: 16px; }
+  .section-title { font-size: 22px; font-weight: 900; text-transform: uppercase; margin-bottom: 4px; }
+  .section-title span { color: var(--yellow); }
+  .section-sub { font-size: 13px; color: var(--muted); font-family: 'Barlow', sans-serif; margin-bottom: 16px; line-height: 1.5; }
+  .prog-card { background: var(--surface); border-left: 4px solid; padding: 14px; margin-bottom: 10px; }
+  .prog-week { display: inline-block; padding: 3px 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; margin-bottom: 6px; }
+  .prog-phase { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .prog-tip { font-size: 13px; color: #aaa; font-family: 'Barlow', sans-serif; line-height: 1.6; }
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+  .metric-card { background: var(--surface); padding: 12px; }
+  .metric-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .metric-target { font-size: 12px; color: var(--yellow); font-family: 'Barlow', sans-serif; }
+
+  /* NUTRITION TAB */
+  .nut-content { padding: 16px; }
+  .nut-card { background: var(--surface); border-left: 4px solid; padding: 14px; margin-bottom: 10px; }
+  .nut-card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .nut-card-body { font-size: 13px; color: #aaa; font-family: 'Barlow', sans-serif; line-height: 1.65; }
+  .macro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .macro-card { background: var(--surface); padding: 12px 8px; text-align: center; }
+  .macro-val { font-size: 22px; font-weight: 900; color: var(--yellow); }
+  .macro-unit { font-size: 10px; color: var(--dim); letter-spacing: 0.1em; }
+  .macro-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+  .macro-kcal { font-size: 10px; color: var(--muted); font-family: 'Barlow', sans-serif; margin-top: 1px; }
+  .calorie-banner { background: #1a1600; border: 1px solid #3a3000; padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .calorie-num { font-size: 36px; font-weight: 900; color: var(--yellow); line-height: 1; }
+  .calorie-info { flex: 1; }
+  .calorie-label { font-size: 10px; letter-spacing: 0.15em; color: #888; margin-bottom: 2px; }
+  .calorie-desc { font-size: 12px; color: #aaa; font-family: 'Barlow', sans-serif; line-height: 1.4; }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .content > * { animation: fadeIn 0.25s ease; }
+
+  /* TIMER RING */
+  .timer-ring-wrap { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
+  .timer-ring { transform: rotate(-90deg); }
+  .timer-ring-bg { fill: none; stroke: var(--surface2); stroke-width: 3; }
+  .timer-ring-fill { fill: none; stroke: var(--teal); stroke-width: 3; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-sub">STEPHEN · 25 · MALE · 186CM</div>
+        <div class="header-title">Athletic <span>Plan</span></div>
+      </div>
+      <div class="badge">6-DAY</div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('plan')">Plan</button>
+      <button class="tab" onclick="switchTab('progression')">Progression</button>
+      <button class="tab" onclick="switchTab('nutrition')">Nutrition</button>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+
+  <div class="timer-bar" id="timerBar">
+    <div class="timer-ring-wrap">
+      <svg class="timer-ring" width="36" height="36" viewBox="0 0 36 36">
+        <circle class="timer-ring-bg" cx="18" cy="18" r="15"/>
+        <circle class="timer-ring-fill" id="timerRing" cx="18" cy="18" r="15" stroke-dasharray="94.25" stroke-dashoffset="94.25"/>
+      </svg>
+    </div>
+    <div>
+      <div class="timer-display" id="timerDisplay">0:00</div>
+      <div class="timer-label">REST TIMER</div>
+    </div>
+    <div>
+      <div class="timer-presets">
+        <button class="preset-btn" onclick="setTimer(45)">45s</button>
+        <button class="preset-btn" onclick="setTimer(60)">1m</button>
+        <button class="preset-btn" onclick="setTimer(90)">90s</button>
+        <button class="preset-btn" onclick="setTimer(120)">2m</button>
+        <button class="preset-btn" onclick="setTimer(180)">3m</button>
+      </div>
+    </div>
+    <div class="timer-btns">
+      <button class="timer-btn secondary" onclick="resetTimer()">↺</button>
+      <button class="timer-btn primary" id="timerStartBtn" onclick="toggleTimer()">START</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS = [
+  {
+    id:1, label:"MON", name:"Lower Power", focus:"Strength & Power", color:"#E8FF47", textColor:"#0a0a0a", tag:"POWER",
+    warmup:"5 min bike/row + leg swings, hip circles, bodyweight squats ×15",
+    exercises:[
+      {name:"Back Squat", sets:4, reps:"5", rest:"3 min", notes:"Work up to a heavy 5. Brace hard, knees out. Own the descent."},
+      {name:"Romanian Deadlift", sets:3, reps:"8", rest:"2 min", notes:"Hinge at hip, soft knee. Feel the hamstring stretch at the bottom."},
+      {name:"Bulgarian Split Squat", sets:3, reps:"10 each", rest:"90s", notes:"Rear foot elevated. Front shin vertical. Brutal but worth it."},
+      {name:"Leg Press", sets:3, reps:"12", rest:"90s", notes:"Full range. Don't lock out knees at top. Control the eccentric."},
+      {name:"Standing Calf Raise", sets:4, reps:"15", rest:"60s", notes:"Full stretch at bottom, hard pause at top. Slow down."},
+      {name:"Copenhagen Plank", sets:3, reps:"20s each", rest:"60s", notes:"Groin and adductor stability. Underrated for knee health."},
+    ],
+    cooldown:"Hip flexor stretch 2×60s, pigeon pose 2×60s each side, foam roll quads and hamstrings"
+  },
+  {
+    id:2, label:"TUE", name:"Upper Push/Pull", focus:"Strength & Mass", color:"#FF6B35", textColor:"#fff", tag:"STRENGTH",
+    warmup:"Band pull-aparts ×20, face pulls ×15, shoulder rotations, push-up progressions",
+    exercises:[
+      {name:"Barbell Bench Press", sets:4, reps:"5", rest:"3 min", notes:"Retract scapula, slight arch, touch chest. Drive hard off the bottom."},
+      {name:"Weighted Pull-Ups", sets:4, reps:"6–8", rest:"2.5 min", notes:"Full dead hang at bottom. Use a belt if bodyweight is easy."},
+      {name:"Overhead Press", sets:3, reps:"8", rest:"2 min", notes:"Brace core. Bar path straight up, push your head through at top."},
+      {name:"Pendlay Row", sets:3, reps:"8", rest:"2 min", notes:"Reset each rep from the floor. Explosive pull to lower chest."},
+      {name:"Dumbbell Lateral Raise", sets:3, reps:"15", rest:"60s", notes:"Slight forward tilt. Lead with elbows. Control the eccentric."},
+      {name:"Face Pull", sets:3, reps:"15", rest:"60s", notes:"External rotation at top. Rear delt and rotator cuff health."},
+    ],
+    cooldown:"Doorway chest stretch 2×60s, lat stretch on rack 2×30s each side, thoracic rotation"
+  },
+  {
+    id:3, label:"WED", name:"Conditioning", focus:"Engine & Athleticism", color:"#00D4AA", textColor:"#0a0a0a", tag:"CARDIO",
+    warmup:"10 min easy bike or row at conversational pace — this IS the warmup",
+    exercises:[
+      {name:"Zone 2 Cardio", sets:1, reps:"25 min", rest:"—", notes:"Row or bike at 130–150 BPM. You can hold a full conversation. Builds aerobic base and directly improves your LDL and blood pressure."},
+      {name:"Farmer's Carry", sets:4, reps:"40m", rest:"90s", notes:"Heavy dumbbells or trap bar. Chest tall, controlled breathing throughout."},
+      {name:"Suitcase Carry (each)", sets:3, reps:"30m", rest:"90s", notes:"One dumbbell only. Don't lean. Core braced against the offset load."},
+      {name:"Med Ball Slam", sets:4, reps:"10", rest:"60s", notes:"Full extension overhead, slam with intent. Power plus conditioning."},
+      {name:"Bear Crawl", sets:4, reps:"20m", rest:"60s", notes:"Knees hover 1 inch off floor. Contralateral movement pattern."},
+      {name:"Dead Bug", sets:3, reps:"10 each side", rest:"45s", notes:"Lower back flat to floor the whole time. Slow controlled eccentric."},
+    ],
+    cooldown:"10 min easy walk + full body stretch. Focus on breathing all the way down."
+  },
+  {
+    id:4, label:"THU", name:"Lower Hypertrophy", focus:"Volume & Mass", color:"#C084FC", textColor:"#fff", tag:"HYPERTRO",
+    warmup:"Glute bridges ×20, banded clamshells ×15 each, tempo bodyweight squat ×10",
+    exercises:[
+      {name:"Conventional Deadlift", sets:4, reps:"6", rest:"3 min", notes:"Hips hinge back to bar. Drive the floor away. Lock out tall at top."},
+      {name:"Hack Squat / Leg Press", sets:4, reps:"12", rest:"2 min", notes:"Higher foot placement for more glute involvement. Full depth."},
+      {name:"Walking Lunge (DB)", sets:3, reps:"12 each", rest:"90s", notes:"Long stride, knee tracks toe. Add weight each week."},
+      {name:"Lying Hamstring Curl", sets:4, reps:"12", rest:"90s", notes:"Squeeze at top. Slow 3-second eccentric every rep."},
+      {name:"Glute-Ham Raise", sets:3, reps:"8", rest:"90s", notes:"Eccentric only if full rep is too hard. Hamstring injury prevention."},
+      {name:"Tibialis Raise", sets:3, reps:"20", rest:"45s", notes:"Shin health and ankle stability. Underrated for athletes."},
+    ],
+    cooldown:"Seated forward fold 2×60s, supine piriformis stretch, foam roll IT band and glutes"
+  },
+  {
+    id:5, label:"FRI", name:"Upper Hypertrophy", focus:"Volume & Definition", color:"#FF6B35", textColor:"#fff", tag:"HYPERTRO",
+    warmup:"Band pull-aparts ×20, Cuban press ×10, arm circles, incline push-ups ×15",
+    exercises:[
+      {name:"Incline DB Press", sets:4, reps:"10", rest:"2 min", notes:"30–45° incline. Upper chest emphasis. Full stretch at bottom."},
+      {name:"Cable Row (Seated)", sets:4, reps:"12", rest:"90s", notes:"Chest tall, pull to lower sternum. Squeeze shoulder blades hard."},
+      {name:"Weighted Dips", sets:3, reps:"10", rest:"2 min", notes:"Slight forward lean for chest emphasis. Full range of motion."},
+      {name:"Single-Arm DB Row", sets:3, reps:"12 each", rest:"90s", notes:"Brace on bench. Row to hip, not armpit. Full extension down."},
+      {name:"Cable Lateral Raise", sets:3, reps:"15", rest:"60s", notes:"Cable gives constant tension. Slow and controlled throughout."},
+      {name:"EZ Bar Curl", sets:3, reps:"12", rest:"60s", notes:"No swinging. Squeeze hard at top. Controlled all the way down."},
+      {name:"Tricep Pushdown", sets:3, reps:"15", rest:"60s", notes:"Elbows locked at sides. Full lockout extension every rep."},
+    ],
+    cooldown:"Overhead tricep stretch, cross-body shoulder stretch, wrist flexor and extensor stretches"
+  },
+  {
+    id:6, label:"SAT", name:"Athletic Conditioning", focus:"Speed & Power", color:"#E8FF47", textColor:"#0a0a0a", tag:"ATHLETIC",
+    warmup:"Dynamic: high knees, A-skips, leg swings, 3 build-up accelerations over 20m",
+    exercises:[
+      {name:"Sprint Intervals (20m)", sets:8, reps:"20m", rest:"90s", notes:"Maximum effort every rep. Full recovery between. Quality over quantity — don't let reps degrade."},
+      {name:"Box Jump", sets:5, reps:"5", rest:"90s", notes:"Explosive triple extension. Land softly, step down — never jump down. Power development."},
+      {name:"Lateral Bound (each)", sets:4, reps:"8 each", rest:"60s", notes:"Stick the landing for 2 seconds. Single-leg stability and lateral power."},
+      {name:"Broad Jump", sets:4, reps:"5", rest:"90s", notes:"Max horizontal distance. Swing arms hard, land balanced and controlled."},
+      {name:"Sled Push", sets:4, reps:"20m", rest:"2 min", notes:"Drive through the floor. Excellent for legs and conditioning. Great for LDL too."},
+      {name:"Battle Ropes", sets:4, reps:"30s", rest:"60s", notes:"Alternating waves at maximum intensity. Upper body conditioning and cardio finisher."},
+    ],
+    cooldown:"10 min walk, full lower body stretch, hip flexor focus after sprint work"
+  },
+  {
+    id:7, label:"SUN", name:"Rest & Recovery", focus:"Regeneration", color:"#94A3B8", textColor:"#fff", tag:"RECOVERY",
+    warmup:"—",
+    exercises:[
+      {name:"Yoga / Mobility Flow", sets:1, reps:"20–30 min", rest:"—", notes:"Full body mobility. Sun salutations, hip openers, spinal rotation. YouTube: follow along."},
+      {name:"Easy Walk", sets:1, reps:"20–40 min", rest:"—", notes:"Zone 1. Fresh air, low stimulus. Mental recovery matters as much as physical."},
+      {name:"Foam Rolling", sets:1, reps:"10–15 min", rest:"—", notes:"Quads, hamstrings, glutes, thoracic spine, lats. Take your time."},
+      {name:"Cold Shower", sets:1, reps:"3–5 min cold", rest:"—", notes:"Finish your regular shower cold. Reduces DOMS, improves mood and energy. Build up gradually."},
+      {name:"Sleep Optimisation", sets:1, reps:"8 hrs target", rest:"—", notes:"No screens 60 min before bed. Magnesium glycinate 300mg. Cool dark room. This is when you actually grow."},
+    ],
+    cooldown:"This is your investment day. Don't skip it — recovery is where the adaptation happens."
+  }
+];
+
+const PROG = [
+  {week:"Weeks 1–4", phase:"Foundation", color:"#E8FF47", textColor:"#0a0a0a", tip:"Learn the movements. Use weights where you can complete all reps with perfect form. Technique before load, always."},
+  {week:"Weeks 5–8", phase:"Load", color:"#FF6B35", textColor:"#fff", tip:"Add 2.5–5kg to main lifts each week where possible. Track every session. Hit the top of rep ranges before adding weight."},
+  {week:"Weeks 9–12", phase:"Intensity", color:"#00D4AA", textColor:"#0a0a0a", tip:"Introduce drop sets and supersets on accessory work. Push closer to failure on the last set of each exercise."},
+  {week:"Week 13+", phase:"Deload", color:"#C084FC", textColor:"#fff", tip:"Every 8–12 weeks, take a deload week. 60% of normal weight, same movements. Come back stronger — this is not optional."},
+];
+
+const NUT = [
+  {title:"Daily Calorie Target", color:"#E8FF47", body:"2,400–2,600 kcal per day. This puts you in a ~500 kcal deficit from your estimated TDEE of ~3,000. Aim for 0.5–0.75kg of fat loss per week. On heavy training days (Mon/Thu/Fri) sit at 2,600. Rest day (Sun) drop to 2,200."},
+  {title:"Protein — Most Important", color:"#FF6B35", body:"160–180g daily. This is non-negotiable for preserving muscle while in a deficit. Spread across 4–5 meals. Sources: chicken, salmon, Greek yogurt, eggs, cottage cheese, whey protein."},
+  {title:"LDL Priority — Your #1 Flag", color:"#00D4AA", body:"LDL 3.9 is high at 25. Increase oily fish 3–4×/week, oats daily, walnuts, olive oil as your main fat. Cut: fatty red meat, full-fat dairy, processed food. Zone 2 cardio (Wed + Sat) directly improves lipid profile within 8 weeks."},
+  {title:"Carbs — Time Them", color:"#C084FC", body:"240–280g daily. Front-load around training. Bigger portions pre and post workout. Lighter at night. Sources: oats, rice, sweet potato, fruit, lentils. This keeps your glycated Hb stable (currently 39 — watch it)."},
+  {title:"Vitamin D — Insufficient at 31", color:"#E8FF47", body:"Take D3 2,000–4,000 IU daily with a fatty meal. Pair with K2 (MK-7, 100mcg). Target 75–150 nmol/L. Low D impairs strength gains and testosterone. Retest in 3 months."},
+  {title:"Supplements — Evidence Only", color:"#FF6B35", body:"Creatine monohydrate 5g/day (most studied, safe, effective for strength). Vitamin D3 + K2 (your bloods show you need this). Magnesium glycinate 300mg before bed (sleep + recovery). Omega-3 fish oil 2g/day (helps LDL). That's it. Nothing else needed."},
+  {title:"Blood Pressure 140/90 — Act Now", color:"#FF6B35", body:"This is Stage 1 hypertension at 25. Reduce sodium: watch processed food, restaurant meals, added salt. The Zone 2 cardio sessions and fat loss will directly lower BP. Recheck in 6–8 weeks. If unchanged, see your GP."},
+];
+
+let activeDay = 0;
+let activeTab = 'plan';
+let expandedEx = null;
+let timerSeconds = 0;
+let timerTotal = 0;
+let timerRunning = false;
+let timerInterval = null;
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['plan','progression','nutrition'][i] === tab);
+  });
+  document.getElementById('timerBar').style.display = tab === 'plan' ? 'flex' : 'none';
+  render();
+}
+
+function setDay(idx) {
+  activeDay = idx;
+  expandedEx = null;
+  render();
+  // scroll day strip to show active
+  const strip = document.querySelector('.day-strip');
+  const btns = strip.querySelectorAll('.day-btn');
+  if(btns[idx]) btns[idx].scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+}
+
+function toggleEx(idx) {
+  expandedEx = expandedEx === idx ? null : idx;
+  render();
+}
+
+function setTimer(secs) {
+  resetTimer();
+  timerSeconds = secs;
+  timerTotal = secs;
+  updateTimerDisplay();
+}
+
+function toggleTimer() {
+  if(timerSeconds === 0) return;
+  timerRunning = !timerRunning;
+  document.getElementById('timerStartBtn').textContent = timerRunning ? 'PAUSE' : 'START';
+  if(timerRunning) {
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      updateTimerDisplay();
+      if(timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('timerStartBtn').textContent = 'START';
+        document.getElementById('timerDisplay').className = 'timer-display done';
+        // vibrate if supported
+        if(navigator.vibrate) navigator.vibrate([200,100,200]);
+      }
+    }, 1000);
+  } else {
+    clearInterval(timerInterval);
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  timerTotal = 0;
+  document.getElementById('timerStartBtn').textContent = 'START';
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timerDisplay');
+  const ring = document.getElementById('timerRing');
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  el.className = 'timer-display' + (timerRunning ? ' running' : timerSeconds === 0 && timerTotal > 0 ? ' done' : '');
+  // update ring
+  const circumference = 94.25;
+  const progress = timerTotal > 0 ? timerSeconds / timerTotal : 0;
+  ring.style.strokeDashoffset = circumference * (1 - progress);
+  ring.style.stroke = timerRunning ? '#00D4AA' : timerSeconds === 0 && timerTotal > 0 ? '#FF6B35' : '#333';
+}
+
+function render() {
+  const content = document.getElementById('content');
+  if(activeTab === 'plan') content.innerHTML = renderPlan();
+  else if(activeTab === 'progression') content.innerHTML = renderProgression();
+  else content.innerHTML = renderNutrition();
+}
+
+function renderPlan() {
+  const d = DAYS[activeDay];
+  const c = d.color;
+  const tc = d.textColor;
+
+  let strip = '<div class="day-strip">';
+  DAYS.forEach((day, i) => {
+    strip += `<button class="day-btn${i===activeDay?' active':''}" onclick="setDay(${i})" style="${i===activeDay?`background:${day.color};color:${day.textColor};`:''}">
+      <span class="day-label">${day.label}</span>
+      <span class="day-tag">${day.tag}</span>
+    </button>`;
+  });
+  strip += '</div>';
+
+  let header = `<div class="day-header" style="background: linear-gradient(135deg, ${c}18 0%, #0d0d0d 70%)">
+    <div class="day-title-row">
+      <div class="day-tag-badge" style="background:${c};color:${tc}">${d.tag}</div>
+      <div>
+        <div class="day-name">${d.name}</div>
+        <div class="day-focus">${d.focus}</div>
+      </div>
+    </div>
+    ${d.warmup !== '—' ? `<div class="warmup-box" style="border-left-color:${c}40">
+      <div class="box-label">WARM-UP</div>
+      <div class="box-text">${d.warmup}</div>
+    </div>` : ''}
+  </div>`;
+
+  let exList = '<div class="ex-list">';
+  d.exercises.forEach((ex, i) => {
+    const isOpen = expandedEx === i;
+    exList += `<div class="ex-row" onclick="toggleEx(${i})">
+      <div class="ex-num${isOpen?' open':''}" style="${isOpen?`background:${c};color:${tc};`:''}">
+        ${i+1}
+      </div>
+      <div class="ex-info">
+        <div class="ex-name">${ex.name}</div>
+      </div>
+      <div class="ex-stats">
+        <div class="stat">
+          <div class="stat-val" style="color:${c}">${ex.sets}</div>
+          <div class="stat-lbl">SETS</div>
+        </div>
+        <div class="stat-sep">×</div>
+        <div class="stat">
+          <div class="stat-val">${ex.reps}</div>
+          <div class="stat-lbl">REPS</div>
+        </div>
+        ${ex.rest !== '—' ? `<div class="stat-sep" style="font-size:14px">·</div>
+        <div class="stat">
+          <div class="stat-val" style="font-size:12px;color:var(--muted)">${ex.rest}</div>
+          <div class="stat-lbl">REST</div>
+        </div>` : ''}
+      </div>
+      <div class="ex-chevron${isOpen?' open':''}">${isOpen?'▲':'▼'}</div>
+    </div>
+    <div class="ex-detail${isOpen?' open':''}" style="border-left-color:${c}">
+      <div class="box-label">COACHING CUE</div>
+      <div class="box-text">${ex.notes}</div>
+    </div>`;
+  });
+  exList += '</div>';
+
+  let cooldown = `<div class="cooldown-box">
+    <div class="box-label">COOL-DOWN</div>
+    <div class="box-text">${d.cooldown}</div>
+  </div>`;
+
+  return strip + header + exList + cooldown;
+}
+
+function renderProgression() {
+  let html = '<div class="prog-content">';
+  html += `<div class="section-title">Progressive <span>Overload</span></div>
+  <div class="section-sub">Do more over time. Track your lifts every single session. Progress is not optional — it's the entire point.</div>`;
+
+  PROG.forEach(p => {
+    html += `<div class="prog-card" style="border-left-color:${p.color}">
+      <div class="prog-week" style="background:${p.color};color:${p.textColor}">${p.week}</div>
+      <div class="prog-phase">${p.phase}</div>
+      <div class="prog-tip">${p.tip}</div>
+    </div>`;
+  });
+
+  html += `<div class="section-title" style="margin-top:20px">Key <span>Metrics</span></div>
+  <div class="section-sub">Track these numbers. They don't lie.</div>
+  <div class="metrics-grid">`;
+  [
+    {m:"1RM Squat", t:"+20–30kg / 12 wks"},
+    {m:"1RM Deadlift", t:"+25–35kg / 12 wks"},
+    {m:"Pull-Up Reps", t:"Bodyweight 10+"},
+    {m:"Bench Press", t:"+15–25kg / 12 wks"},
+    {m:"Sprint 20m", t:"Track & improve"},
+    {m:"Waist (cm)", t:"Target <90cm"},
+  ].forEach(m => {
+    html += `<div class="metric-card">
+      <div class="metric-name">${m.m}</div>
+      <div class="metric-target">${m.t}</div>
+    </div>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderNutrition() {
+  let html = '<div class="nut-content">';
+  html += `<div class="section-title">Fuel the <span>Machine</span></div>
+  <div class="section-sub">Tailored directly to your blood results and goals. 107.8kg → 85–90kg target.</div>`;
+
+  html += `<div class="calorie-banner">
+    <div>
+      <div class="calorie-num">2,500</div>
+      <div class="calorie-label">KCAL / DAY TARGET</div>
+    </div>
+    <div class="calorie-info">
+      <div class="calorie-desc">~500 kcal deficit from TDEE. 0.5–0.75kg fat loss/week. Adjust up on heavy training days.</div>
+    </div>
+  </div>`;
+
+  html += `<div class="macro-grid">
+    <div class="macro-card">
+      <div class="macro-val">170g</div>
+      <div class="macro-unit">GRAMS</div>
+      <div class="macro-name">Protein</div>
+      <div class="macro-kcal">680 kcal</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-val">260g</div>
+      <div class="macro-unit">GRAMS</div>
+      <div class="macro-name">Carbs</div>
+      <div class="macro-kcal">1,040 kcal</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-val">75g</div>
+      <div class="macro-unit">GRAMS</div>
+      <div class="macro-name">Fat</div>
+      <div class="macro-kcal">675 kcal</div>
+    </div>
+  </div>`;
+
+  NUT.forEach(n => {
+    html += `<div class="nut-card" style="border-left-color:${n.color}">
+      <div class="nut-card-title" style="color:${n.color}">${n.title}</div>
+      <div class="nut-card-body">${n.body}</div>
+    </div>`;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+// Init
+render();
+updateTimerDisplay();
+</script>
+</body>
+</html>
